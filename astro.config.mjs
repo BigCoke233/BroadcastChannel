@@ -1,33 +1,15 @@
 import process from 'node:process'
 import cloudflare from '@astrojs/cloudflare'
-import netlify from '@astrojs/netlify'
-import node from '@astrojs/node'
-import vercel from '@astrojs/vercel'
 import sentry from '@sentry/astro'
 import { defineConfig } from 'astro/config'
 import { provider } from 'std-env'
-
-const providers = {
-  vercel: vercel({
-    isr: false,
-    edgeMiddleware: false,
-  }),
-  cloudflare_pages: cloudflare(),
-  netlify: netlify({
-    cacheOnDemandPages: false,
-    edgeMiddleware: false,
-  }),
-  node: node({
-    mode: 'standalone',
-  }),
-}
 
 const adapterProvider = process.env.SERVER_ADAPTER || provider
 
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
-  adapter: providers[adapterProvider] || providers.node,
+  adapter: cloudflare(),
   integrations: [
     ...(process.env.SENTRY_DSN
       ? [
@@ -50,7 +32,7 @@ export default defineConfig({
     ssr: {
       noExternal: process.env.DOCKER ? !!process.env.DOCKER : undefined,
       external: [
-        ...adapterProvider === 'cloudflare_pages'
+        ...(adapterProvider === 'cloudflare_pages'
           ? [
               'module',
               'url',
@@ -82,7 +64,7 @@ export default defineConfig({
               'node:child_process',
               'node:inspector',
             ]
-          : [],
+          : []),
       ],
     },
   },
